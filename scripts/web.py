@@ -46,4 +46,4 @@ if __name__ == '__main__':
     @socketio.on_error(namespace='/test')
     def test_error_handler(e):
         print(e)
-    socketio.run(app, host='0.0.0.0', port=5000, debug=True)
+    socketio.run(app, host='0.0.0.0', port=5000, allow_unsafe_werkzeug=True)

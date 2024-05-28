@@ -1,4 +1,6 @@
 import re
+import os
+import time
 import subprocess
 
 def extract_content(file_path):
@@ -23,10 +25,15 @@ def write_string_to_file(file_path, content):
         file.write(content)
 
 file_path = 'mysql_pass.txt'
-
-mysql_pass = extract_content(file_path)
-command = ['mysql', '-u', 'root', '-p"{}"'.format(mysql_pass)]
-
-with open('change_pass.sql', 'r') as sql_file:
-    subprocess.run(command, stdin=sql_file, capture_output=False, text=True)
-write_string_to_file('mysql_newpass.txt', mysql_pass + ' -> mysql')
+if os.path.exists(file_path):
+    mysql_pass = extract_content(file_path)
+    command = ['mysql', '-u', 'root', '-p"{}"'.format(mysql_pass), '--connect-expired-password', '<', 'change_pass.sql']
+    command_text = ' '.join(command)
+    print(command_text)
+    if subprocess.run(['/bin/bash', '-c', command_text]).returncode == 0:
+        os.remove(file_path)
+    else:
+        time.sleep(5)
+else:
+    for i in range(24):
+        time.sleep(3600)

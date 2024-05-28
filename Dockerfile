@@ -30,7 +30,8 @@ COPY container_files/apache-maven-3.9.7-bin.tar.gz /root/apache-maven-3.9.7-bin.
 ENV MYSQL_ROOT_PASSWORD=mysql
 
 RUN apt-get install -y redis-server && \
-  apt-get install -q -y inetutils-ping 
+  apt-get install -q -y inetutils-ping && \
+  apt-get install -y supervisor 
 
 RUN cd /root && \
   tar -xzf jdk-8u401-linux-x64.tar.gz && \
@@ -70,6 +71,7 @@ COPY scripts/options.txt /root/options.txt
 COPY scripts/init_mysql_pass.py /root/init_mysql_pass.py
 COPY scripts/change_pass.sql /root/change_pass.sql
 # COPY files/ubuntu.sources /etc/apt/sources.list.d/ubuntu.sources
+COPY container_files/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
 RUN cd /root && tar -xzf apache-maven-3.9.7-bin.tar.gz && \
 mv apache-maven-3.9.7 /opt/maven && \
@@ -82,4 +84,4 @@ ENV PATH=$JAVA_HOME/bin:$PATH
 
 EXPOSE 3306 6379 2181 8080 5000
 
-CMD ["/bin/bash"]
+CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]

@@ -1,3 +1,3 @@
 文件列表|ls
 目录空间|du -hd1
-PING|ping baidu.com -t 10
+PING|ping baidu.com -c 10
