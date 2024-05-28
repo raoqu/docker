@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Realtime Command Output</title>
+    <style>
+        /* 添加样式以使内容区域可滚动 */
+        #output {
+            height: 300px;
+            /* 可根据需要调整高度 */
+            overflow-y: auto;
+            border: 1px solid #ccc;
+            padding: 10px;
+        }
+
+        ::-webkit-scrollbar {
+            display: none;
+        }
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.5.1/socket.io.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script type="text/javascript" charset="utf-8">
+        var socket = io.connect('http://' + document.domain + ':' + location.port + '/test');
+        var outputElement = null;
+
+        function runPingCommand() {
+            clearOutput();
+
+            command = $('#optionsList').val()
+            console.log(command);
+            socket.emit('run_command', { 'cmd': command});
+            scrollToBottom(); // 在发送命令后立即滚动到底部
+        }
+
+        function scrollToBottom() {
+            outputElement.scrollTop = outputElement.scrollHeight;
+        }
+
+        function clearOutput() {
+            $('#output').css('background', '#ffffff')
+            outputElement.innerHTML = ''
+            scrollToBottom()
+        }
+
+        socket.on('connect', function () {
+            console.log('Connected to server!');
+        });
+
+        socket.on('command_output', function (data) {
+            if (data.data == 'COMPLETE_OUTPUT!!') {
+                $('#output').css('background', '#eeffee')
+                return
+            }
+            outputElement.innerHTML += data.data + '<br/>';
+            scrollToBottom(); // 每次有新内容时都滚动到底部
+        });
+
+        document.addEventListener('DOMContentLoaded', function () {
+            var button = document.getElementById('runBtn');
+            button.addEventListener('click', runPingCommand);
+            var button = document.getElementById('clearBtn');
+            button.addEventListener('click', clearOutput);
+        });
+        $(document).ready(function () {
+            outputElement = document.getElementById('output');
+            $.ajax({
+                url: '/get_options', // 这里应与Flask中定义的路由相对应
+                type: 'GET',
+                success: function (data) {
+                    var select = $('#optionsList');
+                    $.each(data, function (index, item) {
+                        var arr = item.split('|')
+                        var text = arr[0]
+                        var val = arr.length > 1 ? arr[1] : arr[0]
+                        $('<option>').val(val).text(text).appendTo(select);
+                    });
+                },
+                error: function (error) {
+                    console.error('Error fetching options: ', error);
+                }
+            });
+        });
+    </script>
+</head>
+
+<body>
+    <h1>实时命令输出</h1>
+    <select id="optionsList"></select><br /><br />
+    <button id="runBtn">Start</button> <button id="clearBtn">Clear</button>
+    <div id="output"></div>
+</body>
+
+</html>
